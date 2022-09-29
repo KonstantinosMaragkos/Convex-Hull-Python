@@ -1,0 +1,9 @@
+# Ignore Test Folder
+/tests
+
+# Ignore python inits
+*__init__.py
+
+__pycache__/
+
+compare.py
