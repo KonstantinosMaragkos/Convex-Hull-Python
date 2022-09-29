@@ -1,31 +1,41 @@
 #------------------------------------------------------------------
-# Gift Wrapping (Jarvis) Algorithm for 2-dimensional Convex Hulls
+# Gift Wrapping (Jarvis) Algorithm for 2-dimensional Convex Hull
 # with finite number of points
 #
-# Input: Numpy Array with 2-dim points
-# Output: 
+# Input: Numpy Array with 2-dim points, a boolean for step-by-step vizualization
+# Output: Returns vector with the vertices of the Convex Hull
+# in counter clock wise order
+# O(n^2) complexity
 #------------------------------------------------------------------
-
-from algorithms.predicates import CW2, CCW3
 
 import numpy as np
 import matplotlib.pyplot as plt
-
 from itertools import combinations
 
-class GiftWrapping2:
+from algorithms.predicates import CW2, CCW3
+
+class GiftWrapping:
     def __init__(self, S, plot=False):
         if type(S).__module__ != np.__name__:
             self.S = np.asarray(S)
         else:
             self.S = S
-        self.n = S.shape[0] # number of points
+        self.n = self.S.shape[0] # number of points
+
+        self.ch = []
         
         # initialize visited list for vertices
         self.visited = np.zeros(self.n, dtype=int)
         self.plot = plot
         self.edges = []
         self.pause = 0.01
+    
+    def find_range(self):
+        mult = 1.1
+        self.minx = mult*np.min(self.S[:,0])
+        self.miny = mult*np.min(self.S[:,1])
+        self.maxx = mult*np.max(self.S[:,0])
+        self.maxy = mult*np.max(self.S[:,1])
 
     def find_min(self):
         # returns index , and min point
@@ -52,8 +62,8 @@ class GiftWrapping2:
     
     def plot_edges(self):
         plt.clf()
-        plt.xlim(-110,110)
-        plt.ylim(-110,110)
+        plt.xlim(self.minx, self.maxx)
+        plt.ylim(self.miny, self.maxy)
         plt.scatter(self.S[:,0], self.S[:,1], color='b')
         for e in self.edges:
             x = [e[0][0], e[1][0]]
@@ -62,11 +72,13 @@ class GiftWrapping2:
 
     
     def conv_hull(self):
+        if self.plot:
+            self.find_range()
         # step 1
         ridx, r = self.find_min()
         r0 = r
         #step 2
-        ch = [r0]
+        self.ch = [r0]
         self.visited[ridx] = 1
         finished = False
 
@@ -123,19 +135,39 @@ class GiftWrapping2:
                     plt.pause(self.pause)
                 r = u
                 self.visited[uidx] = 1
-                ch.append(r)
+                self.ch.append(r)
                 
 
         plt.show()
-        return np.asarray(ch)
+        self.ch = np.asarray(self.ch)
+        return self.ch
 
-class ColorMapping:
+    def plotCH(self):
+        x = self.S[:,0].flatten()
+        y = self.S[:, 1].flatten()
+        plt.plot(x, y, 'ro')      # plot the starting points
+        self.ch = np.append(self.ch, [self.ch[0]], axis=0) # add first point at the end of the list
+            # plot convex hull
+        plt.plot(self.ch[:,0], self.ch[:,1], linestyle='-', color='y')
+        plt.show()
+
+
+#------------------------------------------------------------------------------
+# Incremental Algorithm for 2 and 3-dimensional Convex Hull
+# with finite number of points
+#
+# Input: Numpy Array with 2 | 3-dim points
+# Output: Returns array with the edges(2D) or the faces(3D) of the Convex Hull
+# Ο(nlogn + n^2) Complexity
+#------------------------------------------------------------------------------
+class Incremental:
     def __init__(self, S):
         if type(S).__module__ != np.__name__:
             self.S = np.asarray(S)
         else:
             self.S = S
-        self.n , self.dim = S.shape
+        self.n, self.dim = self.S.shape # number of points
+        self.n , self.dim = self.S.shape
         self.v_color = {}               # color of edges/vertices in polytope
         self.f_color = {}               # color of faces/edges in polytope
         self.face = {}                  # holds points of faces/edges
@@ -273,14 +305,14 @@ class ColorMapping:
             self.add_faces(k)
             self.reset_colors()
 
-        ch = []
+        self.ch = []
         if self.dim == 2:
             x = self.S[:,0]
             y = self.S[:,1]
             for v in self.face.values():
-                    ch.append(v)
-            ch = np.asarray(ch)
-            return np.asarray([x[ch.T], y[ch.T]])
+                    self.ch.append(v)
+            self.ch = np.asarray(self.ch)
+            return self.S[self.ch]
         if self.dim == 3:
             x = self.S[:,0]
             y = self.S[:,1]
@@ -289,8 +321,26 @@ class ColorMapping:
                 tmp = []
                 for p in v:
                     tmp.append([x[p], y[p], z[p]])
-                ch.append(tmp)
-            return np.asarray(ch)
+                self.ch.append(tmp)
+            
+            self.ch = np.asarray(self.ch)
+            return self.ch
+    
+    def plotCH(self):
+        if self.dim == 2:
+            x = self.S[:,0].flatten()
+            y = self.S[:, 1].flatten()
+            ch = np.asarray([x[self.ch.T], y[self.ch.T]])
+            plt.plot(x, y, 'ro')      # plot the starting points
+            plt.plot(ch[0], ch[1], linestyle='-', color='y')
+        else:
+            ax = plt.axes(projection='3d')
+            ax.scatter(self.S[:,0], self.S[:,1], self.S[:,2])
+            for face in self.ch:
+                # add first point of face at the end to close circle
+                face = np.append(face, [face[0]], axis = 0)
+                ax.plot(face[:,0], face[:,1], face[:,2], color='y')
+        plt.show()
 
 # ALGORITHM SHORTCUT KEYS
-ALG_KEYS = {'gw2': GiftWrapping2, 'cm': ColorMapping}
+ALG_KEYS = {'gw': GiftWrapping, 'inc': Incremental}

@@ -11,7 +11,7 @@ from algorithms.functions import GiftWrapping2
 
 def main():
 
-    n = 30  # Number of points
+    n = 15  # Number of points
 
     algor = 'gw2'
     dim = 2
