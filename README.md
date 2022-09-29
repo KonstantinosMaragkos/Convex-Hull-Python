@@ -3,7 +3,7 @@
 
 ## __Gift Wrapping (Jarvis March)__
 
-Time Complexity: $$ O(n^2) $$
+Time Complexity: O(n<sup>2</sup>)
 
 **Input**: Array with 2-dim points, a boolean for step-by-step vizualization
 
@@ -26,7 +26,7 @@ Use ```GiftWrapping.plotCh()``` to plot the convex hull.
 
 ## __Incremental via vertex coloring__
 
-Time Complexity: $$ Ο(nlogn + n^2) $$
+Time Complexity: Ο(nlogn + n<sup>2</sup>)
 
 __Input__: Numpy Array with 2 | 3-dim points
 
